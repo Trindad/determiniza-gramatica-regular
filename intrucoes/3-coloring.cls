@@ -1,0 +1,1 @@
+\sffamily Para: \@instructor%
