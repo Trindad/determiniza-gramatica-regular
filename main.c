@@ -73,7 +73,6 @@ int main(int argc, char *argv[]) {
 
 	Gramatica *gramatica = leGramatica();
 
-	printf("%s\n",gramatica->alfabeto);
 	int regular = ehRegular(gramatica);
 
 	if (regular == 0)
@@ -92,6 +91,9 @@ int main(int argc, char *argv[]) {
 
 	Gramatica *novaGramatica = gramaticaDetermizada(gramatica);
 	novaGramatica->numEstados += 0;
+
+	free(gramatica);
+	free(novaGramatica);
 	return 0;
 }
 
@@ -155,15 +157,12 @@ Gramatica *leGramatica(){
 			}
 			if (count == 0)
 			{
-				printf("%s\n", token);
 				strcpy(gramatica->estados[gramatica->numEstados]->identificador,token);
 			}
 			else
 			{
 
 				Opcao *opcao = (Opcao *) malloc(sizeof(Opcao));
-
-				printf("%s\n", token);
 
 
 				if (strcmp(token,"epsilon") == 0)
@@ -187,7 +186,6 @@ Gramatica *leGramatica(){
 				gramatica->estados[gramatica->numEstados]->nOpcoes++;
 			}
 			token = strtok(NULL,":|");
-			printf("%d\n", gramatica->estados[gramatica->numEstados]->nOpcoes);
 			count++;
 		}
 		gramatica->numEstados++;
@@ -244,7 +242,7 @@ int ehRegular(Gramatica *gramatica) {
 			if (gramatica->estados[i]->opcoes[j]->ehEpsilon == 1) {
 				continue;
 			}
-			
+
 			int tamanho = strlen(gramatica->estados[i]->opcoes[j]->producao);
 
 			if ( tamanho > 2)
@@ -264,7 +262,6 @@ int ehRegular(Gramatica *gramatica) {
 
 				if (numpertence  != 1)
 				{
-					printf("uiouoiui %d  --- %s\n", numpertence,gramatica->estados[i]->opcoes[j]->producao);
 					return 0;
 				}
 
@@ -375,9 +372,10 @@ Estado * buscaEstadoPorIdentificador(Gramatica *gramatica, char *estado) {
  */
 
 char *agrupaOpcoesPorSimbolo(Estado *estado, char caractere) {
-
+	printf("aqui producao\n");
 	int i;
 	char *producao = (char*) malloc (sizeof(char)*80);
+	strcpy(producao, "");
 
 	if (producao == NULL)
 	{
@@ -388,18 +386,26 @@ char *agrupaOpcoesPorSimbolo(Estado *estado, char caractere) {
 	{
 		if (estado->opcoes[i]->producao[0] == caractere)
 		{
-			producao = strncat(producao,&estado->opcoes[i]->producao[0],1);
+			producao = strncat(producao,&estado->opcoes[i]->producao[1],1);
 		}
 	}
 
+	
 	return producao;
 }
 
 Gramatica *gramaticaDetermizada(Gramatica *gramatica) {
 
+
 	Gramatica *novaGramatica = (Gramatica*) malloc (sizeof(Gramatica));
 
 	Estado *ordenado[500];
+
+	int t;
+	for (t = 0; t < 500; t++)
+	{
+		ordenado[t] = NULL;
+	}
 
 	if (novaGramatica == NULL)
 	{
@@ -408,25 +414,29 @@ Gramatica *gramaticaDetermizada(Gramatica *gramatica) {
 	}
 
 	int i;
-	int count = -1;
+	int count = -1, quantosJaTem = 0;
 
 	novaGramatica->numEstados = 0;
 	ordenado[0] = gramatica->estados[0];
+	quantosJaTem++;
 
-	while (ordenado[count+1]) {
+	while (ordenado[count+1] != NULL) {
 
 		count++;
+		//printf("ccccooouunntt %d\n", count);
 
 		Estado *estadoAtual = ordenado[count];
+		printf("IDENTIFI %s\n", estadoAtual->identificador);
 
 		Estado *novoEstado = (Estado*) malloc(sizeof(Estado));
 
 		novoEstado->nOpcoes = 0;
+		strcpy(novoEstado->identificador, estadoAtual->identificador);
 
 		for (i = 0; i < strlen(gramatica->alfabeto); i++)
 		{
 			char *novaProducao = agrupaOpcoesPorSimbolo(estadoAtual,gramatica->alfabeto[i]);
-
+			printf("producao: %s\n",novaProducao );
 			if (novaProducao != NULL && strlen(novaProducao) > 0)
 			{
 				Opcao *novaOpcao = (Opcao*) malloc (sizeof(Opcao));
@@ -440,13 +450,60 @@ Gramatica *gramaticaDetermizada(Gramatica *gramatica) {
 				strcpy(novaOpcao->producao,novaProducao);
 				novoEstado->opcoes[novoEstado->nOpcoes] = novaOpcao;
 				novoEstado->nOpcoes++;
+
+				Estado *proximoEstado = NULL;
+				int g, existe = 0;
+
+				for (g = 0; g < gramatica->numEstados; g++)
+				{
+					if (strcmp(novaProducao, gramatica->estados[g]->identificador) == 0) {
+						existe = 1;
+						proximoEstado = gramatica->estados[g];
+						break;
+					}
+				}
+
+
+				if (!existe) {
+					// criar estado novo
+				}
+
+				int r, achou = 0;
+				for (r = 0; r < 500 && ordenado[r]; r++)
+				{
+
+					if (strcmp(novaProducao, ordenado[r]->identificador) == 0)
+					{
+						achou = 1;	
+					}
+				}
+
+				if (!achou) {
+					printf("TESTE %s, %d\n", novaProducao, existe);
+					ordenado[quantosJaTem++] = proximoEstado;
+					printf("COUNT %d\n", count);
+				}
 			}
 
 			free(novaProducao);
 		}
 
-		novaGramatica->estados[ novaGramatica->numEstados++] = novoEstado;
+		novaGramatica->estados[novaGramatica->numEstados++] = novoEstado;
 	}
 
-	return NULL;
+	int y = 0;
+	for (y = 0; y < novaGramatica->numEstados; y++)
+	{
+		printf("%s: ", novaGramatica->estados[y]->identificador);
+
+		int n;
+		for (n = 0; n < novaGramatica->estados[y]->nOpcoes; n++)
+		{
+			printf("%s | ", novaGramatica->estados[y]->opcoes[n]->producao);
+		}
+
+		printf("\n");
+	}
+
+	return novaGramatica;
 }
