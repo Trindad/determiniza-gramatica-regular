@@ -148,6 +148,7 @@ Gramatica *leGramatica(){
 
 	char temporario[TAM_ALFABETO];
 
+
 	while(fgets(temporario,TAM_ALFABETO,stdin) != NULL) {
 
 		if (strcmp(temporario,"$$") == 0)
@@ -160,31 +161,37 @@ Gramatica *leGramatica(){
 		 */
 		char auxiliar[TAM_ALFABETO*2];
 		strcpy(auxiliar,temporario);
-		printf("auxiliar: %s \ntemporario:%s\n",auxiliar,temporario );
-		char *token;
-		token = strtok(auxiliar,":|");
+		//printf("auxiliar: %s \ntemporario:%s\n",auxiliar,temporario );
+		char *token = strtok(auxiliar,":|");
 		int count = 0;
 		
 		while(token) {
 
-		printf("tamanho:%d",strlen(token));
-			if (strcmp(token,"X") == 0)
+			char auxToken[200];
+			strcpy(auxToken, token);
+
+			if (strcmp(auxToken,"X") == 0)
 			{
-				return NULL;
+				printf("Você utilizou um simbolo não-terminal reservado\n");
+				exit(1);
 			}
-			printf("token:%s\n", token);
+
+			printf("auxToken:%s\n", auxToken);
+
 			int tamanho = 0;
 
-			tamanho = strlen(token);
+			tamanho = strlen(auxToken);
 
-			if (token[tamanho-1] == '\n')
+			if (auxToken[tamanho-1] == '\n')
 			{
-				token[tamanho-1] = '\0';
+				auxToken[tamanho-1] = '\0';
 				
 			}
+
+			//verificar identificador da gramatica
 			if (count == 0)
 			{
-				strcpy(gramatica->estados[gramatica->numEstados]->identificador,token);
+				strcpy(gramatica->estados[gramatica->numEstados]->identificador,auxToken);
 			}
 			else
 			{
@@ -197,7 +204,7 @@ Gramatica *leGramatica(){
 					exit(1);
 				}
 
-				if (strcmp(token,"epsilon") == 0)
+				if (strcmp(auxToken,"epsilon") == 0)
 				{
 					gramatica->estados[gramatica->numEstados]->ehFinal = 1;
 					opcao->ehEpsilon = 1;
@@ -207,22 +214,22 @@ Gramatica *leGramatica(){
 					gramatica->estados[gramatica->numEstados]->ehFinal = 0;
 					opcao->ehEpsilon = 0;
 
-					if (strlen(token) == 1 && pertenceAlfabeto(token, gramatica->alfabeto))
+					if (strlen(auxToken) == 1 && pertenceAlfabeto(auxToken, gramatica->alfabeto))
 					{
-
-						strcat(token,"X");
+						strcat(auxToken,"X");
 					}
-					strcpy(opcao->producao,token);
+					strcpy(opcao->producao,auxToken);
+					printf("opcao->producao:%s aux %s\n",opcao->producao,auxToken);
 				}
-				//printf("token:%s\n", token);
+				// //printf("token:%s\n", token);
 				gramatica->estados[gramatica->numEstados]->opcoes[gramatica->estados[gramatica->numEstados]->nOpcoes] = opcao;
 				gramatica->estados[gramatica->numEstados]->nOpcoes++;
 			}
 			token = strtok(NULL,":|");
-			printf("nova leitura :%s\n",token);
+			//printf("nova leitura :%s\n",token);
 			count++;
 		}
-		printf("------------%s-------------\n",token);
+		//printf("------------%s-------------\n",token);
 		gramatica->numEstados++;
 		gramatica->estados[gramatica->numEstados] = (Estado *) malloc(sizeof(Estado));
 
@@ -320,9 +327,10 @@ int ehRegular(Gramatica *gramatica) {
 	{
 		int numpertence = pertenceAlfabeto(gramatica->estados[i]->identificador,gramatica->alfabeto);
 
-		// verica simbolos não terminal, onde não pode ocorrer mais de 1 
+		// verifica simbolos não terminal, onde não pode ocorrer mais de 1 
 		if (strlen(gramatica->estados[i]->identificador) >= 2 || numpertence >= 1)
 		{
+			printf("verifica simbolos não terminal, onde não pode ocorrer mais de 1 \n" );
 			return 0; // gramatica não é regular
 		}
 		
@@ -337,19 +345,20 @@ int ehRegular(Gramatica *gramatica) {
 
 			if ( tamanho > 2)
 			{
+				printf("Tamanho é maior que dois\n");
 				return 0; // gramatica não é regular
 			}
 			else
 			{
-				char subString[4];
-				strncpy(subString,gramatica->estados[i]->opcoes[j]->producao+1,2);
+				// char subString[4];
+				// strncpy(subString,gramatica->estados[i]->opcoes[j]->producao+1,2);
 				
-				int pertence = pertenceAlfabeto(subString,gramatica->alfabeto);
+				// int pertence = pertenceAlfabeto(subString,gramatica->alfabeto);
 
-				if (pertence == 1)
-				{
-					return 0;
-				}
+				// if (pertence == 1)
+				// {
+				// 	return 0;
+				// }
 			}
 			/**
 			 * Verifica se só tem um caractere como opção
@@ -364,6 +373,7 @@ int ehRegular(Gramatica *gramatica) {
 
 				if (numpertence  != 1)
 				{
+					printf("Não pertence ao alfabeto\n");
 					return 0;
 				}
 
@@ -383,12 +393,16 @@ int pertenceAlfabeto(char *producao, char *alfabeto) {
 
 	int i,j,count = 0;
 
-	for (i = 0; i < strlen(producao); i++)
+	char auxiliar[TAM_ALFABETO];
+	strcpy(auxiliar,producao);
+
+	for (i = 0; i < strlen(auxiliar); i++)
 	{
 		for (j = 0; j < strlen(alfabeto); j++)
 		{
-			if (alfabeto[j] == producao[i])
+			if (alfabeto[j] == auxiliar[i])
 			{
+				//printf("%d\n",count );
 				count++;
 			}
 		}
