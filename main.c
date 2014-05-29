@@ -83,7 +83,7 @@ Gramatica *gramaticaDetermizada(Gramatica *gramatica);
 int main(int argc, char *argv[]) {
 
 	Gramatica *gramatica = leGramatica();
-	//imprimeGramatica(gramatica);printf("\n\n\n\n");
+	imprimeGramatica(gramatica);printf("\n\n\n\n");
 
 	int regular = ehRegular(gramatica);
 
@@ -330,7 +330,7 @@ int ehRegular(Gramatica *gramatica) {
 		// verifica simbolos não terminal, onde não pode ocorrer mais de 1 
 		if (strlen(gramatica->estados[i]->identificador) >= 2 || numpertence >= 1)
 		{
-			printf("verifica simbolos não terminal, onde não pode ocorrer mais de 1 \n" );
+			//printf("verifica simbolos não terminal, onde não pode ocorrer mais de 1 \n" );
 			return 0; // gramatica não é regular
 		}
 		
@@ -345,7 +345,7 @@ int ehRegular(Gramatica *gramatica) {
 
 			if ( tamanho > 2)
 			{
-				printf("Tamanho é maior que dois\n");
+				//printf("Tamanho é maior que dois\n");
 				return 0; // gramatica não é regular
 			}
 			else
@@ -373,7 +373,7 @@ int ehRegular(Gramatica *gramatica) {
 
 				if (numpertence  != 1)
 				{
-					printf("Não pertence ao alfabeto\n");
+					//printf("Não pertence ao alfabeto\n");
 					return 0;
 				}
 
@@ -576,7 +576,12 @@ Gramatica *gramaticaDetermizada(Gramatica *gramatica) {
 					exit(1);
 				}
 
-				strcpy(novaOpcao->producao,novaProducao);
+				char t[10];
+				t[0] = gramatica->alfabeto[i];
+				t[1] = '\0';
+
+				strcat(novaOpcao->producao, t);
+				strcat(novaOpcao->producao,novaProducao);
 				novoEstado->opcoes[novoEstado->nOpcoes] = novaOpcao;
 				novoEstado->nOpcoes++;
 
@@ -629,28 +634,28 @@ Gramatica *gramaticaDetermizada(Gramatica *gramatica) {
 		novaGramatica->estados[novaGramatica->numEstados++] = novoEstado;
 	}
 
-	int y = 0;
-	for (y = 0; y < novaGramatica->numEstados; y++)
-	{
-		if (novaGramatica->estados[y]->ehFinal == 1) {
-			printf("*");
-		}
-		printf("%s: ", novaGramatica->estados[y]->identificador);
+	// int y = 0;
+	// for (y = 0; y < novaGramatica->numEstados; y++)
+	// {
+	// 	if (novaGramatica->estados[y]->ehFinal == 1) {
+	// 		printf("*");
+	// 	}
+	// 	printf("%s: ", novaGramatica->estados[y]->identificador);
 
-		int n;
-		for (n = 0; n < novaGramatica->estados[y]->nOpcoes; n++)
-		{
-			if (novaGramatica->estados[y]->opcoes[n]->ehEpsilon == 1) 
-			{
-				printf("ε | ");
-			} else {
-				printf("%s | ", novaGramatica->estados[y]->opcoes[n]->producao);
-			}
+	// 	int n;
+	// 	for (n = 0; n < novaGramatica->estados[y]->nOpcoes; n++)
+	// 	{
+	// 		if (novaGramatica->estados[y]->opcoes[n]->ehEpsilon == 1) 
+	// 		{
+	// 			printf("ε | ");
+	// 		} else {
+	// 			printf("%s | ", novaGramatica->estados[y]->opcoes[n]->producao);
+	// 		}
 			
-		}
+	// 	}
 
-		printf("\n");
-	}
+	// 	printf("\n");
+	// }
 
 	return novaGramatica;
 }
@@ -754,11 +759,21 @@ void imprimeGramatica(Gramatica *gramatica) {
 		
 		for (j = 0; j < strlen(gramatica->alfabeto); j++)
 		{
-			if (gramatica->estados[i]->nOpcoes > j)
+			int achou = 0,k;
+
+			for (k = 0; k < gramatica->estados[i]->nOpcoes; k++)
 			{
-				printf("|  %3s    ",gramatica->estados[i]->opcoes[j]->producao);
-			}
-			else
+
+				if (gramatica->estados[i]->opcoes[k]->producao[0] == gramatica->alfabeto[j])
+				{
+					printf("|  %3s    ",gramatica->estados[i]->opcoes[k]->producao+1);
+					achou = 1;
+					break;
+				}
+				
+			}	
+
+			if(achou == 0)
 			{
 				printf("|   --    ");
 			}
