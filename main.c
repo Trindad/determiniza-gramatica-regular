@@ -350,15 +350,15 @@ int ehRegular(Gramatica *gramatica) {
 			}
 			else
 			{
-				// char subString[4];
-				// strncpy(subString,gramatica->estados[i]->opcoes[j]->producao+1,2);
+				char subString[4];
+				strncpy(subString,gramatica->estados[i]->opcoes[j]->producao+1,2);
 				
-				// int pertence = pertenceAlfabeto(subString,gramatica->alfabeto);
+				int pertence = pertenceAlfabeto(subString,gramatica->alfabeto);
 
-				// if (pertence == 1)
-				// {
-				// 	return 0;
-				// }
+				if (pertence == 1)
+				{
+					return 0;
+				}
 			}
 			/**
 			 * Verifica se só tem um caractere como opção
