@@ -1,0 +1,7 @@
+a,b
+S:aA|aC|bB|bC
+A:aF|a
+B:aF|bF|a|b
+C:aA|aC|bB|bC
+F:aF|bF|a|b
+$$

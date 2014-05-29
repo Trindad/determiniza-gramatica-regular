@@ -18,28 +18,38 @@
 #include <stdlib.h>
 #include <string.h>
 
-
+#define ANSI_COLOR_RED     "\x1b[31m"
+#define ANSI_COLOR_GREEN   "\x1b[32m"
+#define ANSI_COLOR_YELLOW  "\x1b[33m"
+#define ANSI_COLOR_BLUE    "\x1b[34m"
+#define ANSI_COLOR_MAGENTA "\x1b[35m"
+#define ANSI_COLOR_CYAN    "\x1b[36m"
+#define ANSI_COLOR_RESET   "\x1b[0m"
+#define TAM_CARACTERE 80
+#define TAM_ALFABETO 256
+#define TAM_OPCOES 100
+#define TAM_PRODUCOES 210
 /* estruturas */
 
 typedef struct __opcao
 {
-	char producao[20];
+	char producao[TAM_PRODUCOES];
 	short int ehEpsilon;
 } Opcao;
 
 typedef struct __estado
 {
-	char identificador[80]; //caractere
+	char identificador[TAM_CARACTERE]; //caractere
 	int nOpcoes;
-	Opcao *opcoes[100];
+	Opcao *opcoes[TAM_OPCOES];
 	short int ehFinal;
 } Estado;
 
 typedef struct __gramatica
 {
-	char alfabeto[255];
+	char alfabeto[TAM_ALFABETO];
 	int numEstados;
-	Estado *estados[100];
+	Estado *estados[TAM_OPCOES];
 } Gramatica;
 
 /**
@@ -56,7 +66,8 @@ void leAlfabeto(Gramatica *gramatica);
 int ehRegular(Gramatica *gramatica);
 int ehIndeterministica(Gramatica *gramatica);
 char *agrupaOpcoesPorSimbolo(Estado *estado,char caractere);
-
+Estado *mesclaEstados(Gramatica *gramatica, char *producao);
+void imprimeGramatica(Gramatica *gramatica);
 
 Estado * buscaEstadoPorIdentificador(Gramatica *gramatica, char *estado);
 
@@ -72,6 +83,7 @@ Gramatica *gramaticaDetermizada(Gramatica *gramatica);
 int main(int argc, char *argv[]) {
 
 	Gramatica *gramatica = leGramatica();
+	//imprimeGramatica(gramatica);printf("\n\n\n\n");
 
 	int regular = ehRegular(gramatica);
 
@@ -90,6 +102,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	Gramatica *novaGramatica = gramaticaDetermizada(gramatica);
+	imprimeGramatica(novaGramatica);
 	novaGramatica->numEstados += 0;
 
 	free(gramatica);
@@ -123,12 +136,19 @@ Gramatica *leGramatica(){
 
 
 	gramatica->numEstados = 0;
-	gramatica->estados[gramatica->numEstados] = (Estado *) malloc(sizeof(Estado));
+	gramatica->estados[gramatica->numEstados] = (Estado *) malloc (sizeof(Estado));
+
+	if (gramatica->estados[gramatica->numEstados] == NULL)
+	{
+		printf("Erro ao alocar memória\n");
+		exit(1);
+	}
+
 	gramatica->estados[gramatica->numEstados]->nOpcoes = 0;
 
-	char temporario[256];
+	char temporario[TAM_ALFABETO];
 
-	while(fgets(temporario,255,stdin) != NULL) {
+	while(fgets(temporario,TAM_ALFABETO,stdin) != NULL) {
 
 		if (strcmp(temporario,"$$") == 0)
 		{
@@ -138,14 +158,21 @@ Gramatica *leGramatica(){
 		/**
 		 * identifica linha digitada pelo usuário
 		 */
+		char auxiliar[TAM_ALFABETO*2];
+		strcpy(auxiliar,temporario);
+		printf("auxiliar: %s \ntemporario:%s\n",auxiliar,temporario );
 		char *token;
-		token = strtok(temporario,":|");
-
+		token = strtok(auxiliar,":|");
 		int count = 0;
 		
+		while(token) {
 
-		while(token != NULL) {
-
+		printf("tamanho:%d",strlen(token));
+			if (strcmp(token,"X") == 0)
+			{
+				return NULL;
+			}
+			printf("token:%s\n", token);
 			int tamanho = 0;
 
 			tamanho = strlen(token);
@@ -162,8 +189,13 @@ Gramatica *leGramatica(){
 			else
 			{
 
-				Opcao *opcao = (Opcao *) malloc(sizeof(Opcao));
+				Opcao *opcao = (Opcao*) malloc (sizeof(Opcao));
 
+				if (opcao == NULL)
+				{
+					printf("Erro na alocação de memória\n");
+					exit(1);
+				}
 
 				if (strcmp(token,"epsilon") == 0)
 				{
@@ -177,29 +209,84 @@ Gramatica *leGramatica(){
 
 					if (strlen(token) == 1 && pertenceAlfabeto(token, gramatica->alfabeto))
 					{
+
 						strcat(token,"X");
 					}
 					strcpy(opcao->producao,token);
 				}
-
+				//printf("token:%s\n", token);
 				gramatica->estados[gramatica->numEstados]->opcoes[gramatica->estados[gramatica->numEstados]->nOpcoes] = opcao;
 				gramatica->estados[gramatica->numEstados]->nOpcoes++;
 			}
 			token = strtok(NULL,":|");
+			printf("nova leitura :%s\n",token);
 			count++;
 		}
+		printf("------------%s-------------\n",token);
 		gramatica->numEstados++;
 		gramatica->estados[gramatica->numEstados] = (Estado *) malloc(sizeof(Estado));
+
+		if (gramatica->estados[gramatica->numEstados] == NULL)
+		{
+			printf("Erro na Alocação de memória\n");
+			exit(1);
+		}
+
 		gramatica->estados[gramatica->numEstados]->nOpcoes = 0;
+	}
+
+	//Cria estado final
+
+	Estado *estadoX = (Estado*) malloc (sizeof(Estado));
+
+	if (estadoX == NULL)
+	{
+		printf("Erro na Alocação de memória\n");
+		exit(1);
+	}
+
+	estadoX->nOpcoes = 0;
+	estadoX->ehFinal = 1;
+	strcpy(estadoX->identificador, "X");
+
+	gramatica->estados[gramatica->numEstados++] = estadoX;
+
+	printf("numEstados: %d\n", gramatica->numEstados);
+
+	int y = 0;
+	for (y = 0; y < gramatica->numEstados; y++)
+	{
+		if (gramatica->estados[y]->ehFinal == 1) {
+			printf("*");
+		}
+		printf("%s: ", gramatica->estados[y]->identificador);
+
+		int n;
+		for (n = 0; n < gramatica->estados[y]->nOpcoes; n++)
+		{
+			if (gramatica->estados[y]->opcoes[n]->ehEpsilon == 1) 
+			{
+				printf("ε | ");
+			} else {
+				printf("%s | ", gramatica->estados[y]->opcoes[n]->producao);
+			}
+			
+		}
+
+		printf("\n");
 	}
 	return gramatica;
 }
 
+/**
+ * Faz a leitura do alfabeto
+ * Recebe como parametro uma gramatica
+ */
 void leAlfabeto(Gramatica *gramatica) {
 
-	char temporario[255];
+	char temporario[TAM_ALFABETO];
 
-	if(fgets(temporario,255,stdin) != NULL) {
+	if(fgets(temporario,TAM_ALFABETO,stdin) != NULL) {
 
 		/**
 		 * identifica linha digitada pelo usuário
@@ -232,6 +319,8 @@ int ehRegular(Gramatica *gramatica) {
 	for (i = 0; i < gramatica->numEstados;i++)
 	{
 		int numpertence = pertenceAlfabeto(gramatica->estados[i]->identificador,gramatica->alfabeto);
+
+		// verica simbolos não terminal, onde não pode ocorrer mais de 1 
 		if (strlen(gramatica->estados[i]->identificador) >= 2 || numpertence >= 1)
 		{
 			return 0; // gramatica não é regular
@@ -240,6 +329,7 @@ int ehRegular(Gramatica *gramatica) {
 		for (j = 0; j < gramatica->estados[i]->nOpcoes; j++)
 		{
 			if (gramatica->estados[i]->opcoes[j]->ehEpsilon == 1) {
+
 				continue;
 			}
 
@@ -248,6 +338,18 @@ int ehRegular(Gramatica *gramatica) {
 			if ( tamanho > 2)
 			{
 				return 0; // gramatica não é regular
+			}
+			else
+			{
+				char subString[4];
+				strncpy(subString,gramatica->estados[i]->opcoes[j]->producao+1,2);
+				
+				int pertence = pertenceAlfabeto(subString,gramatica->alfabeto);
+
+				if (pertence == 1)
+				{
+					return 0;
+				}
 			}
 			/**
 			 * Verifica se só tem um caractere como opção
@@ -274,7 +376,8 @@ int ehRegular(Gramatica *gramatica) {
 }
 
 /**
- * 
+ * Pertence ao Alfabeto
+ * Verica se um caractere passado como parametro pertence ao alfabeto
  */
 int pertenceAlfabeto(char *producao, char *alfabeto) {
 
@@ -293,6 +396,13 @@ int pertenceAlfabeto(char *producao, char *alfabeto) {
 
 	return count;
 }
+
+/**
+ * Verifica determinismo
+ * passa uma gramatica como parametro
+ * retorna 1(um) caso for indeterminitica
+ * do contrário retorna 0 (zero)
+ */
 int ehIndeterministica(Gramatica *gramatica) {
 
 
@@ -368,13 +478,13 @@ Estado * buscaEstadoPorIdentificador(Gramatica *gramatica, char *estado) {
 }
 
 /**
- * 
+ * Faz o agrupamento dos simbolos para a determinização
  */
 
 char *agrupaOpcoesPorSimbolo(Estado *estado, char caractere) {
-	printf("aqui producao\n");
+
 	int i;
-	char *producao = (char*) malloc (sizeof(char)*80);
+	char *producao = (char*) malloc (sizeof(char)*TAM_CARACTERE);
 	strcpy(producao, "");
 
 	if (producao == NULL)
@@ -394,6 +504,11 @@ char *agrupaOpcoesPorSimbolo(Estado *estado, char caractere) {
 	return producao;
 }
 
+/**
+ * Determinização da gramatica
+ * passa como parametro uma gramatica indeterministica
+ * Retorna a gramatica determinizada
+ */
 Gramatica *gramaticaDetermizada(Gramatica *gramatica) {
 
 
@@ -420,23 +535,23 @@ Gramatica *gramaticaDetermizada(Gramatica *gramatica) {
 	ordenado[0] = gramatica->estados[0];
 	quantosJaTem++;
 
+	strcpy(novaGramatica->alfabeto,gramatica->alfabeto);
+
 	while (ordenado[count+1] != NULL) {
 
 		count++;
-		//printf("ccccooouunntt %d\n", count);
 
 		Estado *estadoAtual = ordenado[count];
-		printf("IDENTIFI %s\n", estadoAtual->identificador);
 
 		Estado *novoEstado = (Estado*) malloc(sizeof(Estado));
 
 		novoEstado->nOpcoes = 0;
+		novoEstado->ehFinal = estadoAtual->ehFinal;
 		strcpy(novoEstado->identificador, estadoAtual->identificador);
 
 		for (i = 0; i < strlen(gramatica->alfabeto); i++)
 		{
 			char *novaProducao = agrupaOpcoesPorSimbolo(estadoAtual,gramatica->alfabeto[i]);
-			printf("producao: %s\n",novaProducao );
 			if (novaProducao != NULL && strlen(novaProducao) > 0)
 			{
 				Opcao *novaOpcao = (Opcao*) malloc (sizeof(Opcao));
@@ -465,7 +580,18 @@ Gramatica *gramaticaDetermizada(Gramatica *gramatica) {
 
 
 				if (!existe) {
-					// criar estado novo
+					proximoEstado = mesclaEstados(gramatica, novaProducao);
+					// printf("------------------------\n");
+					// printf("%s: ", proximoEstado->identificador);
+
+					// int n;
+					// for (n = 0; n < proximoEstado->nOpcoes; n++)
+					// {
+					// 	printf("%s | ", proximoEstado->opcoes[n]->producao);
+					// }
+
+					// printf("\n");
+					// printf("------------------------\n");
 				}
 
 				int r, achou = 0;
@@ -479,9 +605,7 @@ Gramatica *gramaticaDetermizada(Gramatica *gramatica) {
 				}
 
 				if (!achou) {
-					printf("TESTE %s, %d\n", novaProducao, existe);
 					ordenado[quantosJaTem++] = proximoEstado;
-					printf("COUNT %d\n", count);
 				}
 			}
 
@@ -494,16 +618,140 @@ Gramatica *gramaticaDetermizada(Gramatica *gramatica) {
 	int y = 0;
 	for (y = 0; y < novaGramatica->numEstados; y++)
 	{
+		if (novaGramatica->estados[y]->ehFinal == 1) {
+			printf("*");
+		}
 		printf("%s: ", novaGramatica->estados[y]->identificador);
 
 		int n;
 		for (n = 0; n < novaGramatica->estados[y]->nOpcoes; n++)
 		{
-			printf("%s | ", novaGramatica->estados[y]->opcoes[n]->producao);
+			if (novaGramatica->estados[y]->opcoes[n]->ehEpsilon == 1) 
+			{
+				printf("ε | ");
+			} else {
+				printf("%s | ", novaGramatica->estados[y]->opcoes[n]->producao);
+			}
+			
 		}
 
 		printf("\n");
 	}
 
 	return novaGramatica;
+}
+
+Estado *mesclaEstados(Gramatica *gramatica, char *producao) {
+
+	Estado *novoEstado = (Estado*) malloc (sizeof(Estado));
+
+	if (novoEstado == NULL)
+	{
+		printf("Erro na Alocação de memória\n");
+		return NULL;
+	}
+	novoEstado->nOpcoes = 0;
+	strcpy(novoEstado->identificador, producao);
+	//printf("----------------\n");
+
+	int i, j, k, l, m;
+
+	for (i = 0; i < strlen(gramatica->alfabeto); i++)
+	{
+		Opcao *novaOpcao = malloc(sizeof(Opcao));
+		int len = 0;
+
+		for (j = 0; j < strlen(producao); j++)
+		{
+			for (k = 0; k < gramatica->numEstados; k++)
+			{
+				if (producao[j] == gramatica->estados[k]->identificador[0]) {
+
+					if (gramatica->estados[k]->ehFinal == 1) {
+						novoEstado->ehFinal = 1;
+					}
+
+					for (l = 0; l < gramatica->estados[k]->nOpcoes; l++)
+					{
+						if (gramatica->estados[k]->opcoes[l]->producao[0] == gramatica->alfabeto[i]) {
+							int achou = 0;
+
+							novaOpcao->producao[len++] = gramatica->alfabeto[i];
+
+							for (m = 0; m < strlen(novaOpcao->producao); m++)
+							{
+								if (novaOpcao->producao[m] == gramatica->estados[k]->opcoes[l]->producao[1]) {
+									achou = 1;
+									break;
+								}
+							}
+
+							if (!achou) {
+								novaOpcao->producao[len++] = gramatica->estados[k]->opcoes[l]->producao[1];
+							}
+						}
+					}
+				}
+			}
+		}
+
+		if (strlen(novaOpcao->producao) > 0) {
+			novoEstado->opcoes[novoEstado->nOpcoes++] = novaOpcao;
+		}
+	}
+
+
+	return novoEstado;
+}
+
+void imprimeGramatica(Gramatica *gramatica) {
+
+	int i,j;
+
+	printf("+--------------------------------------------------+\n");
+	printf("|" ANSI_COLOR_GREEN "             TABELA DE TRANSIÇÃO  " ANSI_COLOR_RESET "                |\n");
+	printf("+--------------------------------------------------+\n");
+	printf("|    %3s   ",gramatica->estados[0]->identificador );
+
+	for (i = 0; i < strlen(gramatica->alfabeto); i++)
+	{
+		printf("|   %3c   ",gramatica->alfabeto[i]);
+	}
+	printf("|\n");
+	printf("+--------------------------------------------------+\n");
+	for (i = 0; i < gramatica->numEstados; i++)
+	{
+		if (i == 0 && gramatica->estados[i]->ehFinal == 0)
+		{
+			printf("|   ->%3s  ",gramatica->estados[i]->identificador );
+		}
+		else if (gramatica->estados[i]->ehFinal == 1 && i == 0)
+		{
+			printf("|  -> *%3s  ",gramatica->estados[i]->identificador );
+		}
+		else if (gramatica->estados[i]->ehFinal == 1)
+		{
+			printf("|   *%3s   ",gramatica->estados[i]->identificador );
+		}
+		else
+		{
+			printf("|   %3s    ",gramatica->estados[i]->identificador );
+		}
+		
+		for (j = 0; j < strlen(gramatica->alfabeto); j++)
+		{
+			if (gramatica->estados[i]->nOpcoes > j)
+			{
+				printf("|  %3s    ",gramatica->estados[i]->opcoes[j]->producao);
+			}
+			else
+			{
+				printf("|   --    ");
+			}
+			
+		}
+		printf("|\n");
+	}
+	printf("+--------------------------------------------------+\n");
+
 }
