@@ -600,17 +600,17 @@ Gramatica *gramaticaDetermizada(Gramatica *gramatica) {
 
 				if (!existe) {
 					proximoEstado = mesclaEstados(gramatica, novaProducao);
-					// printf("------------------------\n");
-					// printf("%s: ", proximoEstado->identificador);
+					printf("------------------------\n");
+					printf("%s: ", proximoEstado->identificador);
 
-					// int n;
-					// for (n = 0; n < proximoEstado->nOpcoes; n++)
-					// {
-					// 	printf("%s | ", proximoEstado->opcoes[n]->producao);
-					// }
+					int n;
+					for (n = 0; n < proximoEstado->nOpcoes; n++)
+					{
+						printf("%s | ", proximoEstado->opcoes[n]->producao);
+					}
 
-					// printf("\n");
-					// printf("------------------------\n");
+					printf("\n");
+					printf("------------------------\n");
 				}
 
 				int r, achou = 0;
@@ -677,7 +677,13 @@ Estado *mesclaEstados(Gramatica *gramatica, char *producao) {
 
 	for (i = 0; i < strlen(gramatica->alfabeto); i++)
 	{
-		Opcao *novaOpcao = malloc(sizeof(Opcao));
+		Opcao *novaOpcao = (Opcao*) malloc (sizeof(Opcao));
+
+		if (novaOpcao == NULL)
+		{
+			printf("Erro na alocação de memória\n");
+			exit(1);
+		}
 		int len = 0;
 
 		for (j = 0; j < strlen(producao); j++)
