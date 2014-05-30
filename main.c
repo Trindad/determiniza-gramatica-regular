@@ -76,6 +76,8 @@ Estado * buscaEstadoPorIdentificador(Gramatica *gramatica, char *estado);
  */
 Gramatica *gramaticaDetermizada(Gramatica *gramatica);
 
+void eliminaInalcancaveis(Gramatica *gramatica);
+void freeGramatica(Gramatica *gramatica);
 
 /**
  * funções
@@ -102,11 +104,12 @@ int main(int argc, char *argv[]) {
 	}
 
 	Gramatica *novaGramatica = gramaticaDetermizada(gramatica);
+	eliminaInalcancaveis(novaGramatica);
 	imprimeGramatica(novaGramatica);
-	novaGramatica->numEstados += 0;
 
-	free(gramatica);
-	free(novaGramatica);
+	freeGramatica(gramatica);
+	freeGramatica(novaGramatica);
+
 	return 0;
 }
 
@@ -225,6 +228,7 @@ Gramatica *leGramatica(){
 				gramatica->estados[gramatica->numEstados]->opcoes[gramatica->estados[gramatica->numEstados]->nOpcoes] = opcao;
 				gramatica->estados[gramatica->numEstados]->nOpcoes++;
 			}
+
 			token = strtok(NULL,":|");
 			//printf("nova leitura :%s\n",token);
 			count++;
@@ -621,8 +625,6 @@ Gramatica *gramaticaDetermizada(Gramatica *gramatica) {
 			free(novaProducao);
 		}
 
-		//printf("novoooooo, %s\n", novoEstado->identificador);
-
 		if (strlen(estadoAtual->identificador) > 1) {
 			novaGramatica->estados[novaGramatica->numEstados++] = estadoAtual;
 		} else {
@@ -646,6 +648,8 @@ Estado *mesclaEstados(Gramatica *gramatica, char *producao) {
 	novoEstado->nOpcoes = 0;
 	strcpy(novoEstado->identificador, producao);
 
+	// Loop que agrupa identificadores encontrados nas
+	// produções do estado, pelo simbolo do alfabeto
 	for (i = 0; i < strlen(gramatica->alfabeto); i++)
 	{
 		Opcao *novaOpcao = (Opcao*) malloc (sizeof(Opcao));
@@ -655,26 +659,34 @@ Estado *mesclaEstados(Gramatica *gramatica, char *producao) {
 			printf("Erro na alocação de memória\n");
 			exit(1);
 		}
+
 		int len = 0;
+
+		// adiciona letra do alfabeto sendo buscada na produção da nova
+		// opção do estado
 		novaOpcao->producao[len++] = gramatica->alfabeto[i];
 
 		for (j = 0; j < strlen(producao); j++)
 		{
 			for (k = 0; k < gramatica->numEstados; k++)
 			{
-
+				// Verifica se o identificador sendo procurado é o mesmo identificador da
+				// gramatica sendo verificada
 				if (producao[j] == gramatica->estados[k]->identificador[0]) {
 
+					// Se o estado é final, o novo estado também é
 					if (gramatica->estados[k]->ehFinal == 1) {
 						novoEstado->ehFinal = 1;
 					}
 
+					// Varre as opções do estado
 					for (l = 0; l < gramatica->estados[k]->nOpcoes; l++)
 					{
+						// Verifica se a produção sendo verificada possui simbolo do alfabeto procurado
 						if (gramatica->estados[k]->opcoes[l]->producao[0] == gramatica->alfabeto[i]) {
 							int achou = 0;
 
-
+							// Procura se produção já está ou não no nova produção
 							for (m = 0; m < strlen(novaOpcao->producao); m++)
 							{
 								if (novaOpcao->producao[m] == gramatica->estados[k]->opcoes[l]->producao[1]) {
@@ -683,6 +695,8 @@ Estado *mesclaEstados(Gramatica *gramatica, char *producao) {
 								}
 							}
 
+							// concatena produção do estado no nova produção
+							// se não encontrar o mesmo na produção atual
 							if (!achou) {
 								novaOpcao->producao[len++] = gramatica->estados[k]->opcoes[l]->producao[1];
 							}
@@ -696,7 +710,6 @@ Estado *mesclaEstados(Gramatica *gramatica, char *producao) {
 			novoEstado->opcoes[novoEstado->nOpcoes++] = novaOpcao;
 		}
 	}
-
 
 	return novoEstado;
 }
@@ -760,5 +773,65 @@ void imprimeGramatica(Gramatica *gramatica) {
 		printf("|\n");
 	}
 	printf("+--------------------------------------------------+\n");
+}
 
+void eliminaInalcancaveis(Gramatica *gramatica)
+{
+	int i,j, k, o;
+
+	for (i = 1; i < gramatica->numEstados; i++)
+	{
+		Estado *estado = gramatica->estados[i];
+		int achou = 0;
+
+		for (j = 0; j < gramatica->numEstados; j++)
+		{
+			if (j == i) {
+				continue;
+			}
+
+			for (k = 0; k < gramatica->estados[j]->nOpcoes; k++)
+			{
+				if (strcmp(estado->identificador, gramatica->estados[j]->opcoes[k]->producao+1) == 0) {
+					achou = 1;
+					break;
+				}
+			}
+		}
+
+		if (!achou)
+		{
+			int restantes = gramatica->numEstados - i + 1;
+
+			for (o = 0; o < restantes; o++)
+			{
+				gramatica->estados[i + o] = gramatica->estados[i + o + 1];
+			}
+
+			gramatica->numEstados--;
+
+			break;
+		}
+	}
+}
+
+void freeGramatica(Gramatica *gramatica)
+{
+	if (!gramatica) {
+		return;
+	}
+
+	int i, j;
+
+	for (i = 0; i < gramatica->numEstados; i++)
+	{
+		for (j = 0; j < gramatica->estados[i]->nOpcoes; j++)
+		{
+			free(gramatica->estados[i]->opcoes[j]->producao);
+		}
+
+		free(gramatica->estados[i]);
+	}
+
+	free(gramatica);
 }
