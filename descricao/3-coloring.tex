@@ -108,4 +108,11 @@ O algoritmo verifica se a gramatica é regular e se é deterministica ou indeter
 Do contrário, o processo de determinização é iniciado, percorrendo todos os estados da AFND, verificando se há mais de um caminho para estados a partir de cada simbolo do alfabeto. Se houver mais de um caminho, significa que há uma indeterminização. Para resolver isso, é necessário criar um novo estado, onde as transiç~oes de ambos os estados anteriores serão inseridas.
 
 Este processo é executado até que todos os estados já visitados pelo algoritmo sejam inseridos na nova gramática determinizada. Sendo assim, é possível que alguns estados passem a não mais existir, e que muitos outros sejam criados durante o processo.
+
+\section*{Estratégias}
+
+Optamos por fazer a leitura da gramática e não o autômato diretamente, pois é mais genérica, mas também porque é mais simples de o usuário digitar a gramática. Além disso, o usuário consegue ver os processos no qual a mesma passa para ser determinizada, que é determinizar usando o autômato finito.	
+
+Antes de determinizarmos, verificamos se a gramática é regular e se é indeterminística, pois nesses casos não é necessário ou mesmo não é possível realizar o processo de determinização com o nosso algoritmo.
+
 \end{document}

@@ -15,7 +15,7 @@
 \author{Silvana Trindade, Maurício André Cinelli}
 \college{Universidade Federal da Fronteira Sul}
 \coursename{Ciência da Computação}
-\coursesection{Tópicos Avançados em Engenharia de Software --}
+\coursesection{Linguagens Formais e Autômatos}
 \coursenumber{001}
 \instructor{Braulio Adriano de Melo}
 \studentnumber{1121101051,1121101005}
@@ -25,4 +25,46 @@
 
 \begin{document}
 \maketitle
+
+\section *{Instruções}
+
+\subsection *{Compilação}
+
+Para compilar o programa, deverá ser executado o seguinte comando em linha de comando:
+
+\begin{center}
+gcc main.c -o determiniza -Wall
+\end{center}
+
+\subsection *{Execução}
+
+O programa espera um arquivo de teste como sua entrada para executar.
+O formato do mesmo se dá a seguir:\\
+$a,b,c$\\
+$S:aA|bB|cS|c|b$\\
+$A:aS|a|bC|cA$\\
+$B:aA|cB|cS|c$\\
+$C:aS|a|cA|cC$\\
+$\$\$$
+
+
+A primeira linha denota os símbolos do alfabeto, separados por vírgula.
+Após isso é inserido a gramática no formato $[ESTADO]:PRODUCAO1|PRODUCAO2$.
+
+O primeiro estado digitado é o estado de entrada da gramática.
+Para determinizarmos, fazemos uso de um estado reservado, denotado por $X$, onde este não é possível ser usado como entrada direta da gramática.
+
+Após os estados serem digitados, é necessário digitar $\$\$$ para demarcar o fim
+da leitura da gramática.
+
+Após isto, o programa irá determinizar a gramática, se necessário.
+
+Supondo que o arquivo de teste criado tenha o nome $teste2$, então para executar o algoritmo, deve-se digitar o seguinte comando em um terminal:
+
+\begin{center}
+./determiniza < teste2
+\end{center}
+
+Caso seja necessário determinizar a gramática, a saída do algoritmo será uma tabela de transições da gramática determinizada.
+
 \end{document}

@@ -57,35 +57,89 @@ typedef struct __gramatica
  */
 
 char caracteres[] = {'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','X','Y','W','Z'} ;
+
 /**
  * funções de inicialização e verificação da gramatica
  */
 Gramatica *leGramatica();
+
+/**
+ * Pertence ao alfabeto
+ * Tem como dado de entrada uma produção e o alfabeto
+ * Gera como dado de saída o número de caracteres que pertence ao alfabeto
+ */
 int pertenceAlfabeto(char *producao, char *alfabeto);
+
+/**
+ * Faz a leitura do alfabeto da linguagem
+ * Tem como dado de entrada a gramatica
+ */
 void leAlfabeto(Gramatica *gramatica);
+
+/**
+ * Verifica se a grmatica é regular
+ * Tem como dado de entrada uma gramatica
+ * Verificando suas limitações
+ * Se é regular retorna 1 (um)
+ * Do contrario retorna 0 (zero)
+ */
 int ehRegular(Gramatica *gramatica);
+
+/**
+ * Verifica se há indeterminismo 
+ * Tem como dado de entrada uma grámatica
+ * Caso seja indeterministica retorna 1 (um)
+ * Do contrario 0 (zero)
+ */
 int ehIndeterministica(Gramatica *gramatica);
 char *agrupaOpcoesPorSimbolo(Estado *estado,char caractere);
+
+/**
+ * Mescla estados
+ * Tem como dado de entrada uma gramatica e uma produção 
+ * Pegando como base a produção faz a concatenação gerando 
+ * Gera um estado com novas produções
+ */
 Estado *mesclaEstados(Gramatica *gramatica, char *producao);
+
+/**
+ * Imprime a gramatica determinizada em uma tabela
+ */
 void imprimeGramatica(Gramatica *gramatica);
 
+/**
+ * Busco o estado identificador
+ * tem como entrado uma gramatica e um estado não terminal
+ * tem como saída o estado identificador
+ */
 Estado * buscaEstadoPorIdentificador(Gramatica *gramatica, char *estado);
 
 /**
  * Funções para determinização da gramatica
+ * Inicia pelo estado 'S' (inicial por exemplo)
+ * varre cada estado da gramatica anterior
+ * faz a concatenação gerando novos estados 
+ * colocando este novo estado em uma fila de prioridade
  */
 Gramatica *gramaticaDetermizada(Gramatica *gramatica);
 
+/**
+ * Elimina os estados que nunca acontecem, ou seja não aparecem na nova gramatica
+ * Tem como entrada uma gramatica
+ */
 void eliminaInalcancaveis(Gramatica *gramatica);
-void freeGramatica(Gramatica *gramatica);
 
 /**
- * funções
+ * Limpa memória de gramatica
+ * varre cada posição
  */
+void freeGramatica(Gramatica *gramatica);
+
+
 int main(int argc, char *argv[]) {
 
 	Gramatica *gramatica = leGramatica();
-	imprimeGramatica(gramatica);printf("\n\n\n\n");
+	
 
 	int regular = ehRegular(gramatica);
 
@@ -179,8 +233,6 @@ Gramatica *leGramatica(){
 				exit(1);
 			}
 
-			printf("auxToken:%s\n", auxToken);
-
 			int tamanho = 0;
 
 			tamanho = strlen(auxToken);
@@ -222,7 +274,6 @@ Gramatica *leGramatica(){
 						strcat(auxToken,"X");
 					}
 					strcpy(opcao->producao,auxToken);
-					printf("opcao->producao:%s aux %s\n",opcao->producao,auxToken);
 				}
 				// //printf("token:%s\n", token);
 				gramatica->estados[gramatica->numEstados]->opcoes[gramatica->estados[gramatica->numEstados]->nOpcoes] = opcao;
@@ -262,30 +313,6 @@ Gramatica *leGramatica(){
 
 	gramatica->estados[gramatica->numEstados++] = estadoX;
 
-	printf("numEstados: %d\n", gramatica->numEstados);
-
-	int y = 0;
-	for (y = 0; y < gramatica->numEstados; y++)
-	{
-		if (gramatica->estados[y]->ehFinal == 1) {
-			printf("*");
-		}
-		printf("%s: ", gramatica->estados[y]->identificador);
-
-		int n;
-		for (n = 0; n < gramatica->estados[y]->nOpcoes; n++)
-		{
-			if (gramatica->estados[y]->opcoes[n]->ehEpsilon == 1) 
-			{
-				printf("ε | ");
-			} else {
-				printf("%s | ", gramatica->estados[y]->opcoes[n]->producao);
-			}
-			
-		}
-
-		printf("\n");
-	}
 	return gramatica;
 }
 
@@ -514,7 +541,7 @@ char *agrupaOpcoesPorSimbolo(Estado *estado, char caractere) {
 	{
 		if (estado->opcoes[i]->producao[0] == caractere)
 		{
-			producao = strncat(producao,&estado->opcoes[i]->producao[1],1);
+			producao = strcat(producao, &estado->opcoes[i]->producao[0]+1);
 		}
 	}
 
@@ -570,6 +597,7 @@ Gramatica *gramaticaDetermizada(Gramatica *gramatica) {
 		for (i = 0; i < strlen(gramatica->alfabeto); i++)
 		{
 			char *novaProducao = agrupaOpcoesPorSimbolo(estadoAtual,gramatica->alfabeto[i]);
+			
 			if (novaProducao != NULL && strlen(novaProducao) > 0)
 			{
 				Opcao *novaOpcao = (Opcao*) malloc (sizeof(Opcao));
@@ -705,6 +733,8 @@ Estado *mesclaEstados(Gramatica *gramatica, char *producao) {
 				}
 			}
 		}
+
+
 
 		if (strlen(novaOpcao->producao) > 0) {
 			novoEstado->opcoes[novoEstado->nOpcoes++] = novaOpcao;
