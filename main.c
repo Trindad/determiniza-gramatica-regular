@@ -528,12 +528,12 @@ Gramatica *gramaticaDetermizada(Gramatica *gramatica) {
 
 	Gramatica *novaGramatica = (Gramatica*) malloc (sizeof(Gramatica));
 
-	Estado *ordenado[500];
+	Estado *filaDeInsercao[500];
 
 	int t;
 	for (t = 0; t < 500; t++)
 	{
-		ordenado[t] = NULL;
+		filaDeInsercao[t] = NULL;
 	}
 
 	if (novaGramatica == NULL)
@@ -546,24 +546,22 @@ Gramatica *gramaticaDetermizada(Gramatica *gramatica) {
 	int count = -1, quantosJaTem = 0;
 
 	novaGramatica->numEstados = 0;
-	ordenado[0] = gramatica->estados[0];
+	filaDeInsercao[0] = gramatica->estados[0];
 	quantosJaTem++;
 
 	strcpy(novaGramatica->alfabeto,gramatica->alfabeto);
 
-	while (ordenado[count+1] != NULL) {
+	while (filaDeInsercao[count+1] != NULL) {
 
 		count++;
 
-		Estado *estadoAtual = ordenado[count];
+		Estado *estadoAtual = filaDeInsercao[count];
 
 		Estado *novoEstado = (Estado*) malloc(sizeof(Estado));
 
 		novoEstado->nOpcoes = 0;
 		novoEstado->ehFinal = estadoAtual->ehFinal;
 		strcpy(novoEstado->identificador, estadoAtual->identificador);
-
-		printf("attualll  %s\n", estadoAtual->identificador);
 
 		for (i = 0; i < strlen(gramatica->alfabeto); i++)
 		{
@@ -602,45 +600,21 @@ Gramatica *gramaticaDetermizada(Gramatica *gramatica) {
 
 				if (!existe) {
 					proximoEstado = mesclaEstados(gramatica, novaProducao);
-					printf("------------------------\n");
-					printf("%s: ", proximoEstado->identificador);
-
-					int n;
-					for (n = 0; n < proximoEstado->nOpcoes; n++)
-					{
-						printf("%s | ", proximoEstado->opcoes[n]->producao);
-					}
-
-					printf("\n");
-					printf("------------------------\n");
 				}
 
 				int r, achou = 0;
 
-				for (r = 0; r < 500 && ordenado[r]; r++)
+				for (r = 0; r < 500 && filaDeInsercao[r]; r++)
 				{
 
-					if (strcmp(novaProducao, ordenado[r]->identificador) == 0)
+					if (strcmp(novaProducao, filaDeInsercao[r]->identificador) == 0)
 					{
 						achou = 1;	
 					}
 				}
 
 				if (!achou) {
-					ordenado[quantosJaTem++] = proximoEstado;
-					//printf("nao achou, %s\n", proximoEstado->identificador);
-				} else {
-					// printf("------------------------\n");
-					// printf("%s: ", proximoEstado->identificador);
-
-					// int n;
-					// for (n = 0; n < proximoEstado->nOpcoes; n++)
-					// {
-					// 	printf("%s | ", proximoEstado->opcoes[n]->producao);
-					// }
-
-					// printf("\n");
-					// printf("------------------------\n");
+					filaDeInsercao[quantosJaTem++] = proximoEstado;
 				}
 			}
 
@@ -649,31 +623,12 @@ Gramatica *gramaticaDetermizada(Gramatica *gramatica) {
 
 		//printf("novoooooo, %s\n", novoEstado->identificador);
 
-		novaGramatica->estados[novaGramatica->numEstados++] = novoEstado;
+		if (strlen(estadoAtual->identificador) > 1) {
+			novaGramatica->estados[novaGramatica->numEstados++] = estadoAtual;
+		} else {
+			novaGramatica->estados[novaGramatica->numEstados++] = novoEstado;
+		}
 	}
-
-	// int y = 0;
-	// for (y = 0; y < novaGramatica->numEstados; y++)
-	// {
-	// 	if (novaGramatica->estados[y]->ehFinal == 1) {
-	// 		printf("*");
-	// 	}
-	// 	printf("%s: ", novaGramatica->estados[y]->identificador);
-
-	// 	int n;
-	// 	for (n = 0; n < novaGramatica->estados[y]->nOpcoes; n++)
-	// 	{
-	// 		if (novaGramatica->estados[y]->opcoes[n]->ehEpsilon == 1) 
-	// 		{
-	// 			printf("ε | ");
-	// 		} else {
-	// 			printf("%s | ", novaGramatica->estados[y]->opcoes[n]->producao);
-	// 		}
-			
-	// 	}
-
-	// 	printf("\n");
-	// }
 
 	return novaGramatica;
 }
@@ -681,6 +636,7 @@ Gramatica *gramaticaDetermizada(Gramatica *gramatica) {
 Estado *mesclaEstados(Gramatica *gramatica, char *producao) {
 
 	Estado *novoEstado = (Estado*) malloc (sizeof(Estado));
+	int i, j, k, l, m;
 
 	if (novoEstado == NULL)
 	{
@@ -689,9 +645,6 @@ Estado *mesclaEstados(Gramatica *gramatica, char *producao) {
 	}
 	novoEstado->nOpcoes = 0;
 	strcpy(novoEstado->identificador, producao);
-	//printf("----------------\n");
-
-	int i, j, k, l, m;
 
 	for (i = 0; i < strlen(gramatica->alfabeto); i++)
 	{
