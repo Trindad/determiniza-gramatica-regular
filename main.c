@@ -92,6 +92,13 @@ int ehRegular(Gramatica *gramatica);
  * Do contrario 0 (zero)
  */
 int ehIndeterministica(Gramatica *gramatica);
+
+/**
+ * Agrupa as Opções por simbolo
+ * Tem como dado de entrada um estado e um caractere
+ * Pega todas as opções de um estado com o caratere terminal e monta o nome de um novo estado
+ * E retorna o mesmo
+ */
 char *agrupaOpcoesPorSimbolo(Estado *estado,char caractere);
 
 /**

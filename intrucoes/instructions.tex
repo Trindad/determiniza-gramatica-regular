@@ -44,7 +44,7 @@ $a,b,c$\\
 $S:aA|bB|cS|c|b$\\
 $A:aS|a|bC|cA$\\
 $B:aA|cB|cS|c$\\
-$C:aS|a|cA|cC$\\
+$C:aS|a|cA|cC|epsilon$\\
 $\$\$$
 
 
@@ -54,9 +54,9 @@ Após isso é inserido a gramática no formato $[ESTADO]:PRODUCAO1|PRODUCAO2$.
 O primeiro estado digitado é o estado de entrada da gramática.
 Para determinizarmos, fazemos uso de um estado reservado, denotado por $X$, onde este não é possível ser usado como entrada direta da gramática.
 
+Para representar o simbolo $\varepsilon$  será necessário adicionar a palavra literal \textit{epsilon} como produção.
 Após os estados serem digitados, é necessário digitar $\$\$$ para demarcar o fim
 da leitura da gramática.
-
 Após isto, o programa irá determinizar a gramática, se necessário.
 
 Supondo que o arquivo de teste criado tenha o nome $teste2$, então para executar o algoritmo, deve-se digitar o seguinte comando em um terminal:

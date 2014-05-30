@@ -1,5 +1,5 @@
 a,b,c,d
-S:aA|bB|b
+S:aA|bB
 A:bB|epsilon
-B:aA|b
+B:aA|bBb
 $$
