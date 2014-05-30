@@ -66,7 +66,7 @@ void leAlfabeto(Gramatica *gramatica);
 int ehRegular(Gramatica *gramatica);
 int ehIndeterministica(Gramatica *gramatica);
 char *agrupaOpcoesPorSimbolo(Estado *estado,char caractere);
-Estado *mesclaEstados(Gramatica *gramatica, Gramatica *novaGramatica, char *producao);
+Estado *mesclaEstados(Gramatica *gramatica, char *producao);
 void imprimeGramatica(Gramatica *gramatica);
 
 Estado * buscaEstadoPorIdentificador(Gramatica *gramatica, char *estado);
@@ -601,7 +601,7 @@ Gramatica *gramaticaDetermizada(Gramatica *gramatica) {
 
 
 				if (!existe) {
-					proximoEstado = mesclaEstados(gramatica, novaGramatica, novaProducao);
+					proximoEstado = mesclaEstados(gramatica, novaProducao);
 					printf("------------------------\n");
 					printf("%s: ", proximoEstado->identificador);
 
@@ -678,7 +678,7 @@ Gramatica *gramaticaDetermizada(Gramatica *gramatica) {
 	return novaGramatica;
 }
 
-Estado *mesclaEstados(Gramatica *gramatica, Gramatica *novaGramatica, char *producao) {
+Estado *mesclaEstados(Gramatica *gramatica, char *producao) {
 
 	Estado *novoEstado = (Estado*) malloc (sizeof(Estado));
 
@@ -691,9 +691,9 @@ Estado *mesclaEstados(Gramatica *gramatica, Gramatica *novaGramatica, char *prod
 	strcpy(novoEstado->identificador, producao);
 	//printf("----------------\n");
 
-	int i, j, k, l, m, u;
+	int i, j, k, l, m;
 
-	for (i = 0; i < strlen(novaGramatica->alfabeto); i++)
+	for (i = 0; i < strlen(gramatica->alfabeto); i++)
 	{
 		Opcao *novaOpcao = (Opcao*) malloc (sizeof(Opcao));
 
@@ -703,82 +703,35 @@ Estado *mesclaEstados(Gramatica *gramatica, Gramatica *novaGramatica, char *prod
 			exit(1);
 		}
 		int len = 0;
-		novaOpcao->producao[len++] = novaGramatica->alfabeto[i];
+		novaOpcao->producao[len++] = gramatica->alfabeto[i];
 
 		for (j = 0; j < strlen(producao); j++)
 		{
-			int contem = 0;
-			for (k = 0; k < novaGramatica->numEstados; k++)
+			for (k = 0; k < gramatica->numEstados; k++)
 			{
 
-				for (u = 0; u < strlen(novaGramatica->estados[k]->identificador); u++)
-				{
-					if (producao[j] == novaGramatica->estados[k]->identificador[u]) {
-						contem = 1;
-					}
-				}
+				if (producao[j] == gramatica->estados[k]->identificador[0]) {
 
-				if (contem) {
-
-					if (novaGramatica->estados[k]->ehFinal == 1) {
+					if (gramatica->estados[k]->ehFinal == 1) {
 						novoEstado->ehFinal = 1;
 					}
 
-					for (l = 0; l < novaGramatica->estados[k]->nOpcoes; l++)
+					for (l = 0; l < gramatica->estados[k]->nOpcoes; l++)
 					{
-						if (novaGramatica->estados[k]->opcoes[l]->producao[0] == novaGramatica->alfabeto[i]) {
+						if (gramatica->estados[k]->opcoes[l]->producao[0] == gramatica->alfabeto[i]) {
 							int achou = 0;
 
 
 							for (m = 0; m < strlen(novaOpcao->producao); m++)
 							{
-								if (novaOpcao->producao[m] == novaGramatica->estados[k]->opcoes[l]->producao[1]) {
+								if (novaOpcao->producao[m] == gramatica->estados[k]->opcoes[l]->producao[1]) {
 									achou = 1;
 									break;
 								}
 							}
 
 							if (!achou) {
-								novaOpcao->producao[len++] = novaGramatica->estados[k]->opcoes[l]->producao[1];
-							}
-						}
-					}
-				}
-			}
-
-			if (!contem) {
-				int contemNaVelha = 0;
-
-				for (k = 0; k < gramatica->numEstados; k++)
-				{
-
-					if (producao[j] == gramatica->estados[k]->identificador[0]) {
-						contemNaVelha = 1;
-					}
-
-					if (contemNaVelha) {
-
-						if (gramatica->estados[k]->ehFinal == 1) {
-							novoEstado->ehFinal = 1;
-						}
-
-						for (l = 0; l < gramatica->estados[k]->nOpcoes; l++)
-						{
-							if (gramatica->estados[k]->opcoes[l]->producao[0] == gramatica->alfabeto[i]) {
-								int achou = 0;
-
-
-								for (m = 0; m < strlen(novaOpcao->producao); m++)
-								{
-									if (novaOpcao->producao[m] == gramatica->estados[k]->opcoes[l]->producao[1]) {
-										achou = 1;
-										break;
-									}
-								}
-
-								if (!achou) {
-									novaOpcao->producao[len++] = gramatica->estados[k]->opcoes[l]->producao[1];
-								}
+								novaOpcao->producao[len++] = gramatica->estados[k]->opcoes[l]->producao[1];
 							}
 						}
 					}
